@@ -1,0 +1,15 @@
+{
+  "name": "fireimg-packages",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for @fireimg/js and @fireimg/react",
+  "workspaces": [
+    "packages/fireimg-js",
+    "packages/fireimg-react"
+  ],
+  "scripts": {
+    "build": "npm run build -w @fireimg/js && npm run build -w @fireimg/react",
+    "test": "npm run test -w @fireimg/js && npm run test -w @fireimg/react",
+    "typecheck": "npm run typecheck -w @fireimg/js && npm run typecheck -w @fireimg/react"
+  }
+}
