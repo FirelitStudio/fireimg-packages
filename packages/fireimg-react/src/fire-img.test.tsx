@@ -33,7 +33,7 @@ describe("FireImg", () => {
     const img = screen.getByRole("img", { name: "hero" });
     expect(img).toHaveAttribute(
       "src",
-      "https://i.fireimg.com/my-project/images/hero.jpg?width=500&quality=high",
+      "https://i.fireimg.com/my-project/images/hero.jpg?quality=high&width=500",
     );
     expect(img).not.toHaveAttribute("srcset");
   });
@@ -46,7 +46,7 @@ describe("FireImg", () => {
     const img = screen.getByRole("img", { name: "hero" });
     expect(img).toHaveAttribute(
       "src",
-      "https://i.fireimg.com/my-project/images/hero.jpg?width=500&quality=82&fmt=avif",
+      "https://i.fireimg.com/my-project/images/hero.jpg?fmt=avif&quality=82&width=500",
     );
   });
 
@@ -79,10 +79,7 @@ describe("FireImg", () => {
     );
 
     const img = screen.getByRole("img", { name: "hero" });
-    expect(img).toHaveAttribute(
-      "src",
-      "https://i.fireimg.com/other-project/images/hero.jpg?width=500",
-    );
+    expect(img).toHaveAttribute("src", "https://i.fireimg.com/other-project/images/hero.jpg?width=500");
   });
 
   it("throws when no project is configured and no project prop is given", () => {

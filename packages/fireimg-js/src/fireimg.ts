@@ -46,6 +46,16 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+/** Stable query string for CDN URLs (alphabetical by param name; improves CloudFront cache hit rate). */
+function sortedQueryString(params: URLSearchParams): string {
+  const entries = Array.from(params.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const sorted = new URLSearchParams();
+  for (const [k, v] of entries) {
+    sorted.append(k, v);
+  }
+  return sorted.toString();
+}
+
 /**
  * Round a number up to the nearest multiple of `step`.
  * E.g. snapUp(237, 100) => 300
@@ -65,6 +75,10 @@ export function createFireimg(config: FireimgConfig) {
 
   /**
    * Build the full CDN URL for an image with the given options.
+   *
+   * For **SVG** sources, the optimizer ignores transform query parameters (`width`, `height`,
+   * `quality`, `fmt`, `fit`, `pos`) and serves the original file. You can still use FireImg URLs
+   * for consistency with raster assets; control display size with CSS or `<img width>` / `<img height>`.
    */
   function getUrl(imageKey: string, options: ImageOptions = {}): string {
     const key = imageKey.replace(/^\/+/, "");
@@ -82,14 +96,18 @@ export function createFireimg(config: FireimgConfig) {
     if (options.fmt) {
       params.set("fmt", options.fmt);
     }
-    if (options.fit) {
-      params.set("fit", options.fit);
-    }
-    if (options.pos) {
-      params.set("pos", options.pos);
+    const hasWidth = options.width != null && options.width > 0;
+    const hasHeight = options.height != null && options.height > 0;
+    if (hasWidth && hasHeight) {
+      if (options.fit) {
+        params.set("fit", options.fit);
+      }
+      if (options.pos) {
+        params.set("pos", options.pos);
+      }
     }
 
-    const qs = params.toString();
+    const qs = sortedQueryString(params);
     return `${baseUrl}/${project}/images/${key}${qs ? `?${qs}` : ""}`;
   }
 

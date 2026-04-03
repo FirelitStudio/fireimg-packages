@@ -12,11 +12,16 @@ export interface FireimgConfig {
 }
 
 export interface ImageOptions {
+  /** Output width in pixels. Omit both width and height to use the raw image dimensions (still applies fmt/quality). */
   width?: number;
+  /** Output height in pixels. Omit both width and height to use the raw image dimensions. */
   height?: number;
   quality?: Quality;
+  /** Output format. `auto` uses `Accept` (AVIF → WebP → JPEG, or AVIF → WebP → PNG for PNG/GIF) with extension-based fallback when `Accept` is empty. */
   fmt?: Format;
+  /** Applied only when both `width` and `height` are set (omitted from the URL otherwise). */
   fit?: Fit;
+  /** Applied only when both `width` and `height` are set (omitted from the URL otherwise). */
   pos?: Position;
 }
 

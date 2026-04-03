@@ -1,6 +1,6 @@
-# Fireimg client packages
+# FireImg client packages
 
-JavaScript/TypeScript clients for [Fireimg](https://fireimg.com) image optimization.
+JavaScript/TypeScript clients for [FireImg](https://fireimg.com) image optimization.
 
 | Package | Description |
 |---------|-------------|

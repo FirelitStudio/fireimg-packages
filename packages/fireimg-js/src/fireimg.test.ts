@@ -27,9 +27,26 @@ describe("createFireimg", () => {
       expect(url).toContain("height=200");
     });
 
+    it("orders query params alphabetically by name", () => {
+      expect(fireimg.getUrl("photo.jpg", { quality: "high", fmt: "webp" })).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?fmt=webp&quality=high",
+      );
+      expect(fireimg.getUrl("photo.jpg", { width: 300, height: 200 })).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?height=200&width=300",
+      );
+    });
+
     it("adds quality param", () => {
       const url = fireimg.getUrl("photo.jpg", { quality: "high" });
       expect(url).toContain("quality=high");
+    });
+
+    it("omits width and height for format and quality only (uses source dimensions on the server)", () => {
+      const url = fireimg.getUrl("photo.jpg", { quality: "high", fmt: "webp" });
+      expect(url).not.toContain("width=");
+      expect(url).not.toContain("height=");
+      expect(url).toContain("quality=high");
+      expect(url).toContain("fmt=webp");
     });
 
     it("supports numeric quality and fmt params", () => {
@@ -47,6 +64,28 @@ describe("createFireimg", () => {
       });
       expect(url).toContain("fit=cover");
       expect(url).toContain("pos=top");
+    });
+
+    it("omits fit and pos unless both width and height are set", () => {
+      const url = fireimg.getUrl("photo.jpg", {
+        quality: "high",
+        fmt: "auto",
+        fit: "cover",
+        pos: "center",
+      });
+      expect(url).not.toContain("fit=");
+      expect(url).not.toContain("pos=");
+    });
+
+    it("omits fit and pos when only width is set", () => {
+      const url = fireimg.getUrl("photo.jpg", {
+        width: 400,
+        fit: "cover",
+        pos: "center",
+      });
+      expect(url).toContain("width=400");
+      expect(url).not.toContain("fit=");
+      expect(url).not.toContain("pos=");
     });
 
     it("clamps dimensions to MAX_DIMENSION (4000)", () => {
