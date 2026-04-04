@@ -3,14 +3,18 @@ import type { FireimgConfig, ImageOptions, SnapOptions } from "./types";
 const DEFAULT_BASE_URL = "https://i.fireimg.com";
 const MAX_DIMENSION = 4000;
 
+/** Recommended token order for path-based URLs (matches server PathVariantParamOrder). */
+const PATH_PARAM_ORDER = ["width", "height", "quality", "fmt", "fit", "pos"] as const;
+
 let _defaultConfig: FireimgConfig | null = null;
 let _defaultInstance: ReturnType<typeof createFireimg> | null = null;
 
 function resolveEnv(name: string): string | undefined {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const g = globalThis as any;
-    return typeof g.process !== "undefined" ? g.process.env?.[name] : undefined;
+    const proc = (
+      globalThis as { process?: { env?: Record<string, string | undefined> } }
+    ).process;
+    return proc?.env?.[name];
   } catch {
     return undefined;
   }
@@ -46,23 +50,91 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/** Stable query string for CDN URLs (alphabetical by param name; improves CloudFront cache hit rate). */
-function sortedQueryString(params: URLSearchParams): string {
-  const entries = Array.from(params.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  const sorted = new URLSearchParams();
-  for (const [k, v] of entries) {
-    sorted.append(k, v);
+/**
+ * Infer default output format from file extension (aligned with server negotiateAutoFormat
+ * when fmt is auto or omitted).
+ */
+export function inferFmtFromImageKey(imageKey: string): "jpg" | "png" | "webp" | "avif" {
+  const lower = imageKey.toLowerCase();
+  if (lower.endsWith(".avif")) return "avif";
+  if (lower.endsWith(".webp")) return "webp";
+  if (lower.endsWith(".png")) return "png";
+  if (lower.endsWith(".gif")) return "png";
+  return "jpg";
+}
+
+/** Normalize quality to a path token value (numeric string or low/medium/high). */
+function normalizeQualityForPath(q: string): string {
+  const s = q.trim().toLowerCase();
+  if (s === "low" || s === "medium" || s === "high") return s;
+  const n = parseInt(s, 10);
+  if (!Number.isNaN(n) && n >= 1 && n <= 100) return String(n);
+  return s;
+}
+
+function encodePathToken(key: (typeof PATH_PARAM_ORDER)[number], value: string): string {
+  switch (key) {
+    case "width":
+      return `w_${value}`;
+    case "height":
+      return `h_${value}`;
+    case "quality":
+      return `q_${value}`;
+    case "fmt":
+      return `fmt_${value}`;
+    case "fit":
+      return `fit_${value}`;
+    case "pos":
+      return `pos_${value}`;
+    default:
+      return `${key}_${value}`;
   }
-  return sorted.toString();
 }
 
 /**
- * Round a number up to the nearest multiple of `step`.
- * E.g. snapUp(237, 100) => 300
+ * Build the comma-separated variant segment (e.g. w_400,h_300,q_75,fmt_webp).
+ * Omits width/height when not set; always includes quality and fmt so CDN keys match cached objects.
  */
-export function snapUp(value: number, step: number): number {
-  if (step <= 0) return value;
-  return Math.ceil(value / step) * step;
+export function buildVariantSegment(imageKey: string, options: ImageOptions): string {
+  const params: Partial<Record<(typeof PATH_PARAM_ORDER)[number], string>> = {};
+
+  if (options.width != null && options.width > 0) {
+    params.width = String(clamp(Math.round(options.width), 1, MAX_DIMENSION));
+  }
+  if (options.height != null && options.height > 0) {
+    params.height = String(clamp(Math.round(options.height), 1, MAX_DIMENSION));
+  }
+
+  const qRaw = options.quality?.trim() ? options.quality : "medium";
+  params.quality = normalizeQualityForPath(qRaw);
+
+  let fmt: string;
+  if (options.fmt && options.fmt !== "auto") {
+    fmt = options.fmt;
+  } else {
+    fmt = inferFmtFromImageKey(imageKey);
+  }
+  params.fmt = fmt;
+
+  const hasWidth = options.width != null && options.width > 0;
+  const hasHeight = options.height != null && options.height > 0;
+  if (hasWidth && hasHeight) {
+    if (options.fit) {
+      params.fit = options.fit;
+      if (options.fit === "cover") {
+        params.pos = options.pos ?? "center";
+      }
+    }
+  }
+
+  const parts: string[] = [];
+  for (const k of PATH_PARAM_ORDER) {
+    const v = params[k];
+    if (v != null && v !== "") {
+      parts.push(encodePathToken(k, v));
+    }
+  }
+  return parts.join(",");
 }
 
 export function createFireimg(config: FireimgConfig) {
@@ -82,33 +154,12 @@ export function createFireimg(config: FireimgConfig) {
    */
   function getUrl(imageKey: string, options: ImageOptions = {}): string {
     const key = imageKey.replace(/^\/+/, "");
-    const params = new URLSearchParams();
-
-    if (options.width != null && options.width > 0) {
-      params.set("width", String(clamp(Math.round(options.width), 1, MAX_DIMENSION)));
+    const segment = buildVariantSegment(key, options);
+    const basePath = `${baseUrl}/${project}/images`;
+    if (!segment) {
+      return `${basePath}/${key}`;
     }
-    if (options.height != null && options.height > 0) {
-      params.set("height", String(clamp(Math.round(options.height), 1, MAX_DIMENSION)));
-    }
-    if (options.quality) {
-      params.set("quality", options.quality);
-    }
-    if (options.fmt) {
-      params.set("fmt", options.fmt);
-    }
-    const hasWidth = options.width != null && options.width > 0;
-    const hasHeight = options.height != null && options.height > 0;
-    if (hasWidth && hasHeight) {
-      if (options.fit) {
-        params.set("fit", options.fit);
-      }
-      if (options.pos) {
-        params.set("pos", options.pos);
-      }
-    }
-
-    const qs = sortedQueryString(params);
-    return `${baseUrl}/${project}/images/${key}${qs ? `?${qs}` : ""}`;
+    return `${basePath}/${segment}/${key}`;
   }
 
   /**
@@ -142,4 +193,13 @@ export function createFireimg(config: FireimgConfig) {
   }
 
   return { getUrl, getSnappedUrl, getSrcSet };
+}
+
+/**
+ * Round a number up to the nearest multiple of `step`.
+ * E.g. snapUp(237, 100) => 300
+ */
+export function snapUp(value: number, step: number): number {
+  if (step <= 0) return value;
+  return Math.ceil(value / step) * step;
 }
