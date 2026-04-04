@@ -33,7 +33,25 @@ jobs:
         run: npm test
 
       - name: Bump patch versions
+        shell: bash
         run: |
+          set -euo pipefail
+          # If git is behind the registry (e.g. manual publish or failed push after publish),
+          # a single `npm version patch` can land on an already-published version.
+          align_if_behind() {
+            local pkg="$1"
+            local dir="$2"
+            local pub cur
+            pub=$(npm view "$pkg" version 2>/dev/null || echo "0.0.0")
+            cur=$(node -p "require('./$dir/package.json').version")
+            if [ "$(printf '%s\n' "$cur" "$pub" | sort -V | head -n1)" = "$cur" ] && [ "$cur" != "$pub" ]; then
+              echo "Aligning $pkg from $cur to registry $pub before bump"
+              npm pkg set "version=$pub" -w "$pkg"
+            fi
+          }
+          align_if_behind "@fireimg/js" "packages/fireimg-js"
+          align_if_behind "@fireimg/react" "packages/fireimg-react"
+          npm install
           npm version patch --no-git-tag-version -w @fireimg/js
           npm version patch --no-git-tag-version -w @fireimg/react
 
