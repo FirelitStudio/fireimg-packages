@@ -152,6 +152,15 @@ export function createFireimg(config: FireimgConfig) {
    * `quality`, `fmt`, `fit`, `pos`) and serves the original file. You can still use FireImg URLs
    * for consistency with raster assets; control display size with CSS or `<img width>` / `<img height>`.
    */
+  /**
+   * Unmodified bytes at `raw-images/{project}/{imageKey}` — served via CDN without
+   * optimizer transforms (contrast with `/{project}/images/...`, which may serve cached output).
+   */
+  function getRawUrl(imageKey: string): string {
+    const key = imageKey.replace(/^\/+/, "");
+    return `${baseUrl}/raw-images/${project}/${key}`;
+  }
+
   function getUrl(imageKey: string, options: ImageOptions = {}): string {
     const key = imageKey.replace(/^\/+/, "");
     const segment = buildVariantSegment(key, options);
@@ -192,7 +201,7 @@ export function createFireimg(config: FireimgConfig) {
     return entries.join(", ");
   }
 
-  return { getUrl, getSnappedUrl, getSrcSet };
+  return { getUrl, getRawUrl, getSnappedUrl, getSrcSet };
 }
 
 /**

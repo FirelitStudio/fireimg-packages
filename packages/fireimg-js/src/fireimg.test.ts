@@ -117,6 +117,20 @@ describe("createFireimg", () => {
     });
   });
 
+  describe("getRawUrl", () => {
+    it("builds the CDN URL for the unmodified object under raw-images/", () => {
+      expect(fireimg.getRawUrl("photo.jpg")).toBe(
+        "https://i.fireimg.com/raw-images/my-project/photo.jpg",
+      );
+    });
+
+    it("strips leading slashes from image key", () => {
+      expect(fireimg.getRawUrl("/photo.jpg")).toBe(
+        "https://i.fireimg.com/raw-images/my-project/photo.jpg",
+      );
+    });
+  });
+
   describe("getSnappedUrl", () => {
     it("snaps width up to nearest 100 by default", () => {
       const url = fireimg.getSnappedUrl("photo.jpg", 237);
