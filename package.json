@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "npm run build -w @fireimg/js && npm run build -w @fireimg/react",
-    "test": "npm run test -w @fireimg/js && npm run test -w @fireimg/react",
+    "test": "npm run test -w @fireimg/js && npm run build -w @fireimg/js && npm run test -w @fireimg/react",
     "typecheck": "npm run typecheck -w @fireimg/js && npm run typecheck -w @fireimg/react"
   }
 }

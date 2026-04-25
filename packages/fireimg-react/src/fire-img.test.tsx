@@ -33,7 +33,7 @@ describe("FireImg", () => {
     const img = screen.getByRole("img", { name: "hero" });
     expect(img).toHaveAttribute(
       "src",
-      "https://i.fireimg.com/my-project/images/w_500,q_high,fmt_jpg/hero.jpg",
+      "https://i.fireimg.com/my-project/images/hero.jpg?width=500&quality=high",
     );
     expect(img).not.toHaveAttribute("srcset");
   });
@@ -46,7 +46,7 @@ describe("FireImg", () => {
     const img = screen.getByRole("img", { name: "hero" });
     expect(img).toHaveAttribute(
       "src",
-      "https://i.fireimg.com/my-project/images/w_500,q_82,fmt_avif/hero.jpg",
+      "https://i.fireimg.com/my-project/images/hero.jpg?width=500&quality=82&format=avif",
     );
   });
 
@@ -57,9 +57,9 @@ describe("FireImg", () => {
 
     const img = screen.getByRole("img", { name: "hero" });
     const srcset = img.getAttribute("srcset")!;
-    expect(srcset).toContain("w_100");
+    expect(srcset).toContain("width=100");
     expect(srcset).toContain("100w");
-    expect(srcset).toContain("w_2000");
+    expect(srcset).toContain("width=2000");
     expect(srcset).toContain("2000w");
   });
 
@@ -81,7 +81,7 @@ describe("FireImg", () => {
     const img = screen.getByRole("img", { name: "hero" });
     expect(img).toHaveAttribute(
       "src",
-      "https://i.fireimg.com/other-project/images/w_500,q_high,fmt_jpg/hero.jpg",
+      "https://i.fireimg.com/other-project/images/hero.jpg?width=500&quality=high",
     );
   });
 
@@ -107,7 +107,7 @@ describe("useFireimgUrl", () => {
     );
 
     expect(screen.getByTestId("url").textContent).toBe(
-      "https://i.fireimg.com/my-project/images/w_300,q_high,fmt_png/photo.png",
+      "https://i.fireimg.com/my-project/images/photo.png?width=300&quality=high",
     );
   });
 
@@ -117,7 +117,7 @@ describe("useFireimgUrl", () => {
     );
 
     expect(screen.getByTestId("url").textContent).toBe(
-      "https://i.fireimg.com/alt-project/images/w_300,q_high,fmt_png/photo.png",
+      "https://i.fireimg.com/alt-project/images/photo.png?width=300&quality=high",
     );
   });
 });
