@@ -11,6 +11,8 @@ export interface FireImgProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   fmt?: Format;
   fit?: Fit;
   pos?: Position;
+  /** Letterbox fill when `fit` is `contain` (see @fireimg/js `ImageOptions.fill`). */
+  fill?: string;
   /** Fixed width — if set, disables responsive snapping */
   width?: number;
   /** Fixed height */
@@ -35,6 +37,7 @@ export const FireImg = React.forwardRef<HTMLImageElement, FireImgProps>(function
     fmt,
     fit,
     pos,
+    fill,
     width,
     height,
     snapStep = 100,
@@ -58,9 +61,10 @@ export const FireImg = React.forwardRef<HTMLImageElement, FireImgProps>(function
       ...(fmt && { fmt }),
       ...(fit && { fit }),
       ...(pos && { pos }),
+      ...(fill && { fill }),
       ...(height && { height }),
     }),
-    [quality, fmt, fit, pos, height],
+    [quality, fmt, fit, pos, fill, height],
   );
 
   const hasFixedWidth = width != null && width > 0;

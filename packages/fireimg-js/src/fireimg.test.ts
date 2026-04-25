@@ -9,46 +9,46 @@ describe("createFireimg", () => {
   });
 
   describe("getUrl", () => {
-    it("builds a URL with default quality and inferred fmt in the path", () => {
+    it("builds a URL with default quality and inferred format in query params", () => {
       expect(fireimg.getUrl("photo.jpg")).toBe(
-        "https://i.fireimg.com/my-project/images/q_medium,fmt_jpg/photo.jpg",
+        "https://i.fireimg.com/my-project/images/photo.jpg?quality=high",
       );
     });
 
     it("strips leading slashes from image key", () => {
       expect(fireimg.getUrl("/photo.jpg")).toBe(
-        "https://i.fireimg.com/my-project/images/q_medium,fmt_jpg/photo.jpg",
+        "https://i.fireimg.com/my-project/images/photo.jpg?quality=high",
       );
     });
 
-    it("adds width and height as path tokens in recommended order (w, h, q, fmt, …)", () => {
+    it("adds width and height query parameters", () => {
       expect(fireimg.getUrl("photo.jpg", { width: 300, height: 200 })).toBe(
-        "https://i.fireimg.com/my-project/images/w_300,h_200,q_medium,fmt_jpg/photo.jpg",
+        "https://i.fireimg.com/my-project/images/photo.jpg?width=300&height=200&quality=high",
       );
     });
 
-    it("orders tokens as width, height, quality, fmt (then fit, pos when applicable)", () => {
+    it("uses canonical query parameter names", () => {
       expect(fireimg.getUrl("photo.jpg", { quality: "high", fmt: "webp" })).toBe(
-        "https://i.fireimg.com/my-project/images/q_high,fmt_webp/photo.jpg",
+        "https://i.fireimg.com/my-project/images/photo.jpg?quality=high&format=webp",
       );
     });
 
-    it("adds quality as q_* token", () => {
+    it("adds quality query parameter", () => {
       const url = fireimg.getUrl("photo.jpg", { quality: "high" });
-      expect(url).toContain("q_high");
+      expect(url).toContain("quality=high");
     });
 
     it("omits width and height for format and quality only (uses source dimensions on the server)", () => {
       const url = fireimg.getUrl("photo.jpg", { quality: "high", fmt: "webp" });
-      expect(url).not.toContain("w_");
-      expect(url).not.toContain("h_");
-      expect(url).toContain("q_high");
-      expect(url).toContain("fmt_webp");
+      expect(url).not.toContain("width=");
+      expect(url).not.toContain("height=");
+      expect(url).toContain("quality=high");
+      expect(url).toContain("format=webp");
     });
 
     it("supports numeric quality and fmt params", () => {
       expect(fireimg.getUrl("photo.jpg", { quality: "82", fmt: "avif" })).toBe(
-        "https://i.fireimg.com/my-project/images/q_82,fmt_avif/photo.jpg",
+        "https://i.fireimg.com/my-project/images/photo.jpg?quality=82&format=avif",
       );
     });
 
@@ -61,7 +61,20 @@ describe("createFireimg", () => {
           pos: "top",
         }),
       ).toBe(
-        "https://i.fireimg.com/my-project/images/w_100,h_100,q_medium,fmt_jpg,fit_cover,pos_top/photo.jpg",
+        "https://i.fireimg.com/my-project/images/photo.jpg?width=100&height=100&quality=high&fit=cover&position=top",
+      );
+    });
+
+    it("adds fill token for fit contain when set", () => {
+      expect(
+        fireimg.getUrl("photo.jpg", {
+          width: 100,
+          height: 100,
+          fit: "contain",
+          fill: "transparent",
+        }),
+      ).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?width=100&height=100&quality=high&fit=contain&fill=transparent",
       );
     });
 
@@ -72,8 +85,8 @@ describe("createFireimg", () => {
         fit: "cover",
         pos: "center",
       });
-      expect(url).not.toContain("fit_");
-      expect(url).not.toContain("pos_");
+      expect(url).not.toContain("fit=");
+      expect(url).not.toContain("position=");
     });
 
     it("omits fit and pos when only width is set", () => {
@@ -82,37 +95,69 @@ describe("createFireimg", () => {
         fit: "cover",
         pos: "center",
       });
-      expect(url).toContain("w_400");
-      expect(url).not.toContain("fit_");
-      expect(url).not.toContain("pos_");
+      expect(url).toContain("width=400");
+      expect(url).not.toContain("fit=");
+      expect(url).not.toContain("position=");
     });
 
     it("clamps dimensions to MAX_DIMENSION (4000)", () => {
       const url = fireimg.getUrl("photo.jpg", { width: 9999 });
-      expect(url).toContain("w_4000");
+      expect(url).toContain("width=4000");
     });
 
     it("clamps dimensions to minimum of 1", () => {
       const url = fireimg.getUrl("photo.jpg", { width: -5 });
-      expect(url).not.toContain("w_");
+      expect(url).not.toContain("width=");
     });
 
     it("rounds fractional widths", () => {
       const url = fireimg.getUrl("photo.jpg", { width: 300.7 });
-      expect(url).toContain("w_301");
+      expect(url).toContain("width=301");
     });
 
     it("uses a custom base URL", () => {
       const custom = createFireimg({ project: "test", baseUrl: "https://cdn.example.com" });
       expect(custom.getUrl("img.png")).toBe(
-        "https://cdn.example.com/test/images/q_medium,fmt_png/img.png",
+        "https://cdn.example.com/test/images/img.png?quality=high",
       );
     });
 
     it("strips trailing slashes from custom base URL", () => {
       const custom = createFireimg({ project: "test", baseUrl: "https://cdn.example.com///" });
       expect(custom.getUrl("img.png")).toBe(
-        "https://cdn.example.com/test/images/q_medium,fmt_png/img.png",
+        "https://cdn.example.com/test/images/img.png?quality=high",
+      );
+    });
+  });
+
+  describe("getQueryUrl", () => {
+    it("matches getUrl output", () => {
+      const options = { width: 300, height: 200, quality: "82" as const, fmt: "webp" as const };
+      expect(fireimg.getQueryUrl("photo.jpg", options)).toBe(fireimg.getUrl("photo.jpg", options));
+    });
+
+    it("puts transforms in the query string after the image key", () => {
+      expect(fireimg.getQueryUrl("photo.jpg", { width: 300, height: 200 })).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?width=300&height=200&quality=high",
+      );
+    });
+
+    it("includes fit and position for cover when width and height are set", () => {
+      expect(
+        fireimg.getQueryUrl("photo.jpg", {
+          width: 100,
+          height: 100,
+          fit: "cover",
+          pos: "top",
+        }),
+      ).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?width=100&height=100&quality=high&fit=cover&position=top",
+      );
+    });
+
+    it("always includes quality and format and strips leading slashes from image key", () => {
+      expect(fireimg.getQueryUrl("/photo.jpg")).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?quality=high",
       );
     });
   });
@@ -134,29 +179,29 @@ describe("createFireimg", () => {
   describe("getSnappedUrl", () => {
     it("snaps width up to nearest 100 by default", () => {
       const url = fireimg.getSnappedUrl("photo.jpg", 237);
-      expect(url).toContain("w_300");
+      expect(url).toContain("width=300");
     });
 
     it("snaps width up to custom step", () => {
       const url = fireimg.getSnappedUrl("photo.jpg", 237, { snapStep: 50 });
-      expect(url).toContain("w_250");
+      expect(url).toContain("width=250");
     });
 
     it("keeps exact multiples unchanged", () => {
       const url = fireimg.getSnappedUrl("photo.jpg", 400);
-      expect(url).toContain("w_400");
+      expect(url).toContain("width=400");
     });
 
     it("includes other image options alongside snapped width", () => {
       const url = fireimg.getSnappedUrl("photo.jpg", 237, { quality: "82", fmt: "webp" });
-      expect(url).toContain("w_300");
-      expect(url).toContain("q_82");
-      expect(url).toContain("fmt_webp");
+      expect(url).toContain("width=300");
+      expect(url).toContain("quality=82");
+      expect(url).toContain("format=webp");
     });
 
     it("clamps snapped width to MAX_DIMENSION", () => {
       const url = fireimg.getSnappedUrl("photo.jpg", 5000, { snapStep: 1000 });
-      expect(url).toContain("w_4000");
+      expect(url).toContain("width=4000");
     });
   });
 
@@ -165,9 +210,9 @@ describe("createFireimg", () => {
       const srcset = fireimg.getSrcSet("photo.jpg");
       const entries = srcset.split(", ");
       expect(entries.length).toBe(20);
-      expect(entries[0]).toContain("w_100");
+      expect(entries[0]).toContain("width=100");
       expect(entries[0]).toMatch(/100w$/);
-      expect(entries[entries.length - 1]).toContain("w_2000");
+      expect(entries[entries.length - 1]).toContain("width=2000");
       expect(entries[entries.length - 1]).toMatch(/2000w$/);
     });
 
@@ -179,9 +224,9 @@ describe("createFireimg", () => {
       });
       const entries = srcset.split(", ");
       expect(entries.length).toBe(3);
-      expect(entries[0]).toContain("w_200");
-      expect(entries[1]).toContain("w_400");
-      expect(entries[2]).toContain("w_600");
+      expect(entries[0]).toContain("width=200");
+      expect(entries[1]).toContain("width=400");
+      expect(entries[2]).toContain("width=600");
     });
 
     it("includes image options in each srcset entry", () => {
@@ -194,8 +239,8 @@ describe("createFireimg", () => {
       });
       const entries = srcset.split(", ");
       for (const entry of entries) {
-        expect(entry).toContain("q_low");
-        expect(entry).toContain("fmt_jpg");
+        expect(entry).toContain("quality=low");
+        expect(entry).not.toContain("format=");
       }
     });
   });
@@ -209,7 +254,7 @@ describe("configureFireimg / getDefaultFireimg", () => {
   it("returns an instance using the configured project", () => {
     const instance = getDefaultFireimg();
     expect(instance.getUrl("img.jpg")).toBe(
-      "https://i.fireimg.com/default-proj/images/q_medium,fmt_jpg/img.jpg",
+      "https://i.fireimg.com/default-proj/images/img.jpg?quality=high",
     );
   });
 
@@ -225,14 +270,14 @@ describe("configureFireimg / getDefaultFireimg", () => {
     const b = getDefaultFireimg();
     expect(a).not.toBe(b);
     expect(b.getUrl("img.jpg")).toBe(
-      "https://i.fireimg.com/new-proj/images/q_medium,fmt_jpg/img.jpg",
+      "https://i.fireimg.com/new-proj/images/img.jpg?quality=high",
     );
   });
 
   it("respects a custom baseUrl in the config", () => {
     configureFireimg({ project: "p", baseUrl: "https://cdn.test.com" });
     expect(getDefaultFireimg().getUrl("img.jpg")).toBe(
-      "https://cdn.test.com/p/images/q_medium,fmt_jpg/img.jpg",
+      "https://cdn.test.com/p/images/img.jpg?quality=high",
     );
   });
 });

@@ -81,7 +81,7 @@ describe("FireImg", () => {
     const img = screen.getByRole("img", { name: "hero" });
     expect(img).toHaveAttribute(
       "src",
-      "https://i.fireimg.com/other-project/images/w_500,q_medium,fmt_jpg/hero.jpg",
+      "https://i.fireimg.com/other-project/images/w_500,q_high,fmt_jpg/hero.jpg",
     );
   });
 
@@ -107,7 +107,7 @@ describe("useFireimgUrl", () => {
     );
 
     expect(screen.getByTestId("url").textContent).toBe(
-      "https://i.fireimg.com/my-project/images/w_300,q_medium,fmt_png/photo.png",
+      "https://i.fireimg.com/my-project/images/w_300,q_high,fmt_png/photo.png",
     );
   });
 
@@ -117,7 +117,7 @@ describe("useFireimgUrl", () => {
     );
 
     expect(screen.getByTestId("url").textContent).toBe(
-      "https://i.fireimg.com/alt-project/images/w_300,q_medium,fmt_png/photo.png",
+      "https://i.fireimg.com/alt-project/images/w_300,q_high,fmt_png/photo.png",
     );
   });
 });

@@ -23,6 +23,10 @@ export interface ImageOptions {
   fit?: Fit;
   /** Applied only when both `width` and `height` are set (omitted from the URL otherwise). */
   pos?: Position;
+  /**
+   * Letterbox fill for `fit: "contain"`. Use `transparent` for alpha-capable output formats; use a hex color (`#RRGGBB` or `#RGB`) for solid color (e.g. for JPEG).
+   */
+  fill?: string;
 }
 
 export interface SnapOptions extends ImageOptions {
