@@ -27,6 +27,8 @@ export interface FireImgProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   minWidth?: number;
   /** Maximum width for srcset generation @default 2000 */
   maxWidth?: number;
+  /** CDN cache-busting version (≥ 1); adds `version=` to URLs. */
+  cacheVersion?: number;
 }
 
 export const FireImg = React.forwardRef<HTMLImageElement, FireImgProps>(function FireImg(
@@ -43,6 +45,7 @@ export const FireImg = React.forwardRef<HTMLImageElement, FireImgProps>(function
     snapStep = 100,
     minWidth = 100,
     maxWidth = 2000,
+    cacheVersion,
     sizes,
     ...rest
   },
@@ -63,8 +66,9 @@ export const FireImg = React.forwardRef<HTMLImageElement, FireImgProps>(function
       ...(pos && { pos }),
       ...(fill && { fill }),
       ...(height && { height }),
+      ...(cacheVersion != null && cacheVersion >= 1 && { cacheVersion }),
     }),
-    [quality, fmt, fit, pos, fill, height],
+    [quality, fmt, fit, pos, fill, height, cacheVersion],
   );
 
   const hasFixedWidth = width != null && width > 0;

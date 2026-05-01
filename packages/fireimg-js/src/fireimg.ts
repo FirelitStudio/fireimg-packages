@@ -171,7 +171,22 @@ function buildQueryString(imageKey: string, options: ImageOptions): string {
   if (r.fit) sp.set("fit", r.fit);
   if (r.pos) sp.set("position", r.pos);
   if (r.fill) sp.set("fill", r.fill);
+  if (options.cacheVersion != null && options.cacheVersion >= 1) {
+    sp.set("version", String(effectiveCacheVersion(options.cacheVersion)));
+  }
   return sp.toString();
+}
+
+/** Effective cache-busting version for URLs (Omitempty legacy → 1). */
+export function effectiveCacheVersion(cacheVersion?: number): number {
+  return cacheVersion != null && cacheVersion >= 1 ? Math.floor(cacheVersion) : 1;
+}
+
+/** Appends `version=` so CloudFront varies cache without affecting optimized bytes. */
+export function appendImageCacheVersion(url: string, cacheVersion?: number): string {
+  const v = effectiveCacheVersion(cacheVersion);
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}version=${v}`;
 }
 
 /**

@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createFireimg, snapUp, configureFireimg, getDefaultFireimg } from "./fireimg";
+import {
+  appendImageCacheVersion,
+  createFireimg,
+  effectiveCacheVersion,
+  snapUp,
+  configureFireimg,
+  getDefaultFireimg,
+} from "./fireimg";
 
 describe("createFireimg", () => {
   const fireimg = createFireimg({ project: "my-project" });
@@ -113,6 +120,12 @@ describe("createFireimg", () => {
     it("rounds fractional widths", () => {
       const url = fireimg.getUrl("photo.jpg", { width: 300.7 });
       expect(url).toContain("width=301");
+    });
+
+    it("appends version when cacheVersion is set", () => {
+      expect(fireimg.getUrl("photo.jpg", { cacheVersion: 2 })).toBe(
+        "https://i.fireimg.com/my-project/images/photo.jpg?quality=high&version=2",
+      );
     });
 
     it("uses a custom base URL", () => {
@@ -278,6 +291,20 @@ describe("configureFireimg / getDefaultFireimg", () => {
     configureFireimg({ project: "p", baseUrl: "https://cdn.test.com" });
     expect(getDefaultFireimg().getUrl("img.jpg")).toBe(
       "https://cdn.test.com/p/images/img.jpg?quality=high",
+    );
+  });
+});
+
+describe("appendImageCacheVersion / effectiveCacheVersion", () => {
+  it("defaults missing version to 1", () => {
+    expect(effectiveCacheVersion()).toBe(1);
+    expect(effectiveCacheVersion(0)).toBe(1);
+    expect(appendImageCacheVersion("https://cdn/x/y/z.jpg")).toBe("https://cdn/x/y/z.jpg?version=1");
+  });
+
+  it("appends to URLs that already have a query string", () => {
+    expect(appendImageCacheVersion("https://cdn/p/images/a.jpg?width=1", 3)).toBe(
+      "https://cdn/p/images/a.jpg?width=1&version=3",
     );
   });
 });

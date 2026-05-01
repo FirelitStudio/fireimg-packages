@@ -9,5 +9,7 @@ export {
   snapUp,
   buildVariantSegment,
   inferFmtFromImageKey,
+  effectiveCacheVersion,
+  appendImageCacheVersion,
 } from "@fireimg/js";
 export type { FireimgConfig, ImageOptions, SnapOptions, Quality, Format, Fit, Position } from "@fireimg/js";

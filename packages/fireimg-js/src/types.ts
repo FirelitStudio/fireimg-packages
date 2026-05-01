@@ -27,6 +27,10 @@ export interface ImageOptions {
    * Letterbox fill for `fit: "contain"`. Use `transparent` for alpha-capable output formats; use a hex color (`#RRGGBB` or `#RGB`) for solid color (e.g. for JPEG).
    */
   fill?: string;
+  /**
+   * When set (≥ 1), adds `version=` for CDN cache keys only; ignored by the image optimizer.
+   */
+  cacheVersion?: number;
 }
 
 export interface SnapOptions extends ImageOptions {

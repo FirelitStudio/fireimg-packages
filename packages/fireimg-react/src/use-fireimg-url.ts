@@ -13,6 +13,16 @@ export function useFireimgUrl(imageKey: string, options: ImageOptions = {}, proj
   );
   return useMemo(
     () => fireimg.getUrl(imageKey, options),
-    [fireimg, imageKey, options.width, options.height, options.quality, options.fmt, options.fit, options.pos],
+    [
+      fireimg,
+      imageKey,
+      options.width,
+      options.height,
+      options.quality,
+      options.fmt,
+      options.fit,
+      options.pos,
+      options.cacheVersion,
+    ],
   );
 }
