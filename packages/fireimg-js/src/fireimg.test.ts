@@ -1,12 +1,21 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   appendImageCacheVersion,
+  buildImageTransformQueryString,
   createFireimg,
   effectiveCacheVersion,
   snapUp,
   configureFireimg,
   getDefaultFireimg,
 } from "./fireimg";
+
+describe("buildImageTransformQueryString", () => {
+  it("matches getUrl query portion for width + default quality", () => {
+    expect(buildImageTransformQueryString("Evermont_Header.jpeg", { width: 80 })).toBe(
+      "width=80&quality=high",
+    );
+  });
+});
 
 describe("createFireimg", () => {
   const fireimg = createFireimg({ project: "my-project" });

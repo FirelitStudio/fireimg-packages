@@ -1,6 +1,6 @@
 {
   "name": "@fireimg/react",
-  "version": "0.1.4",
+  "version": "0.1.0",
   "description": "React components for optimized fireimg images",
   "type": "module",
   "main": "./dist/index.cjs",

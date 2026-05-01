@@ -1,6 +1,6 @@
 {
   "name": "@fireimg/js",
-  "version": "0.1.4",
+  "version": "0.1.0",
   "description": "Vanilla JS client for building optimized fireimg image URLs",
   "type": "module",
   "main": "./dist/index.cjs",

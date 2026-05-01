@@ -4,6 +4,7 @@ export {
   getDefaultFireimg,
   snapUp,
   buildVariantSegment,
+  buildImageTransformQueryString,
   inferFmtFromImageKey,
   effectiveCacheVersion,
   appendImageCacheVersion,

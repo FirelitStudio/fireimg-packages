@@ -177,6 +177,11 @@ function buildQueryString(imageKey: string, options: ImageOptions): string {
   return sp.toString();
 }
 
+/** Query string for `/{project}/images/{imageKey}?…` (width, height, quality, format, …). */
+export function buildImageTransformQueryString(imageKey: string, options: ImageOptions = {}): string {
+  return buildQueryString(imageKey, options);
+}
+
 /** Effective cache-busting version for URLs (Omitempty legacy → 1). */
 export function effectiveCacheVersion(cacheVersion?: number): number {
   return cacheVersion != null && cacheVersion >= 1 ? Math.floor(cacheVersion) : 1;
