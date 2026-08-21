@@ -37,6 +37,18 @@ describe("createFireimg", () => {
       );
     });
 
+    it("keeps folder prefixes in the image key for query-parameter URLs", () => {
+      expect(fireimg.getUrl("my-folder/mountain.jpg", { width: 800 })).toBe(
+        "https://i.fireimg.com/my-project/images/my-folder/mountain.jpg?width=800&quality=high",
+      );
+    });
+
+    it("builds NeedApp-style nested keys as query-parameter URLs", () => {
+      expect(fireimg.getUrl("feed_items/43/uuid.jpg", { width: 800, fmt: "webp" })).toBe(
+        "https://i.fireimg.com/my-project/images/feed_items/43/uuid.jpg?width=800&quality=high&format=webp",
+      );
+    });
+
     it("adds width and height query parameters", () => {
       expect(fireimg.getUrl("photo.jpg", { width: 300, height: 200 })).toBe(
         "https://i.fireimg.com/my-project/images/photo.jpg?width=300&height=200&quality=high",
